@@ -212,6 +212,16 @@ private:
   }
 };
 
+//////////////////////////////COMPARISON FUNC//////////////////////////////////
+struct cmp_str
+{
+  bool operator()(const char *a, const char *b) const
+  {
+    return std::strcmp(a, b) < 0;
+  }
+};
+///////////////////////////////////////////////////////////////////////////////
+
 class ConfSection;
 ////////////////////////////CONFIGURATION///////////////////////////////////////////////////////////////////////
 class Config
@@ -219,7 +229,7 @@ class Config
 
 public:
   // typedef std::map<char*, std::map<const char*, QuantumProp*>> QMap;
-  typedef std::map<char *, ConfSection> QMap;
+  typedef std::map<char *, ConfSection, cmp_str> QMap;
 
   Config(const char *fname);
 

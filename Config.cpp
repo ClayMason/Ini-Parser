@@ -6,6 +6,7 @@
 #include <list>
 #include <fstream>
 #include <utility>
+#include <cassert>
 
 Config::Config(const char *fname)
 {
