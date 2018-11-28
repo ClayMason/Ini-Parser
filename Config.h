@@ -7,6 +7,7 @@
 #include <utility>
 #include <list>
 #include <stdio.h>
+#include <cstring>
 #include <iostream>
 #include <vector>
 
@@ -94,179 +95,192 @@ DOCUMENTATION
 *       - SMap::const_iterator end () - returns a const iterator to the end of the section map.
 *       - int save () - returns the size of map containing the key-value properties (number of entries).
 */
-class QuantumProp {
-  protected:
-    const char* type;
-    char* str_value;
+class QuantumProp
+{
+protected:
+  const char *type;
+  char *str_value;
 
-  public:
+public:
+  QuantumProp() : type(0), str_value(0) {}
+  QuantumProp(const char *_type) : type(_type), str_value(0) {}
+  ~QuantumProp() {}
 
-    QuantumProp (): type(0), str_value(0) {}
-    QuantumProp (const char* _type) : type(_type), str_value(0) {}
-    ~QuantumProp() {}
-
-    // accessors
-    bool isBool () { return type != 0 && strcmp(type, "bool") == 0; }
-    bool isInt () { return type != 0 && strcmp(type, "int") == 0; }
-    bool isFloat () { return type != 0 && strcmp(type, "float") == 0; }
-    bool isString () { return type != 0 && strcmp(type, "string") == 0; }
-    bool isPath () { return type != 0 && strcmp(type, "path") == 0; }
-    const char* getType() { return type; }
-    char* strValue() { return str_value; }
+  // accessors
+  bool isBool() { return type != 0 && strcmp(type, "bool") == 0; }
+  bool isInt() { return type != 0 && strcmp(type, "int") == 0; }
+  bool isFloat() { return type != 0 && strcmp(type, "float") == 0; }
+  bool isString() { return type != 0 && strcmp(type, "string") == 0; }
+  bool isPath() { return type != 0 && strcmp(type, "path") == 0; }
+  const char *getType() { return type; }
+  char *strValue() { return str_value; }
 };
 
 ////////////////////////////INT PROP////////////////////////////////
-class IntProp : public QuantumProp {
-  public:
-    int value;
-    IntProp (int val) : QuantumProp("int"), value (val) {this->str_value=stringify(val);}
-    ~IntProp () {}
+class IntProp : public QuantumProp
+{
+public:
+  int value;
+  IntProp(int val) : QuantumProp("int"), value(val) { this->str_value = stringify(val); }
+  ~IntProp() {}
 
-  private:
-    char* stringify(int v) {
-      std::string s = std::to_string(v);
-      char* str_val = new char[s.size()+1];
-      strcpy(str_val, s.c_str());
-      return str_val;
-    }
+private:
+  char *stringify(int v)
+  {
+    std::string s = std::to_string(v);
+    char *str_val = new char[s.size() + 1];
+    strcpy(str_val, s.c_str());
+    return str_val;
+  }
 };
 
 ////////////////////////////BOOL PROP////////////////////////////////
-class BoolProp : public QuantumProp {
-  public:
-    bool value;
-    BoolProp (bool val) : QuantumProp("bool"), value (val) {this->str_value=stringify(val);}
-    ~BoolProp () {}
+class BoolProp : public QuantumProp
+{
+public:
+  bool value;
+  BoolProp(bool val) : QuantumProp("bool"), value(val) { this->str_value = stringify(val); }
+  ~BoolProp() {}
 
-  private:
-    char* stringify(bool v) {
-      char* str_val;
-      if (v) {
-        str_val = new char[4];
-        strcpy(str_val, "Yes");
-      }
-      else {
-        str_val = new char[3];
-        strcpy(str_val, "No");
-      }
-      return str_val;
+private:
+  char *stringify(bool v)
+  {
+    char *str_val;
+    if (v)
+    {
+      str_val = new char[4];
+      strcpy(str_val, "Yes");
     }
+    else
+    {
+      str_val = new char[3];
+      strcpy(str_val, "No");
+    }
+    return str_val;
+  }
 };
 
 ////////////////////////////STRING PROP////////////////////////////////
-class StringProp : public QuantumProp {
-  public:
-    std::string value;
-    StringProp (std::string val) : QuantumProp("string"), value (val) {this->str_value=stringify(val);}
-    ~StringProp () {}
+class StringProp : public QuantumProp
+{
+public:
+  std::string value;
+  StringProp(std::string val) : QuantumProp("string"), value(val) { this->str_value = stringify(val); }
+  ~StringProp() {}
 
-  private:
-    char* stringify(std::string val) {
-      char* str_val = new char[val.size() + 1];
-      strcpy(str_val, val.c_str());
-      return str_val;
-    }
+private:
+  char *stringify(std::string val)
+  {
+    char *str_val = new char[val.size() + 1];
+    strcpy(str_val, val.c_str());
+    return str_val;
+  }
 };
 
 ////////////////////////////FLOAT PROP////////////////////////////////
-class FloatProp : public QuantumProp {
-  public:
-    float value;
-    FloatProp (float val) : QuantumProp("float"), value (val) {this->str_value=stringify(val);}
-    ~FloatProp () {}
+class FloatProp : public QuantumProp
+{
+public:
+  float value;
+  FloatProp(float val) : QuantumProp("float"), value(val) { this->str_value = stringify(val); }
+  ~FloatProp() {}
 
-  private:
-    char* stringify(float val) {
-      std::string s_val = std::to_string(val);
-      char* str_val = new char[s_val.size()+1];
-      strcpy(str_val, s_val.c_str());
-      return str_val;
-    }
+private:
+  char *stringify(float val)
+  {
+    std::string s_val = std::to_string(val);
+    char *str_val = new char[s_val.size() + 1];
+    strcpy(str_val, s_val.c_str());
+    return str_val;
+  }
 };
 
 ////////////////////////////PATH PROP////////////////////////////////
-class PathProp : public QuantumProp {
-  public:
-    std::string value;
-    PathProp (std::string val) : QuantumProp("path"), value (val) {this->str_value=stringify(val);}
-    ~PathProp () {}
+class PathProp : public QuantumProp
+{
+public:
+  std::string value;
+  PathProp(std::string val) : QuantumProp("path"), value(val) { this->str_value = stringify(val); }
+  ~PathProp() {}
 
-  private:
-    char* stringify(std::string val) {
-      char* str_val = new char[val.size() + 1];
-      strcpy(str_val, val.c_str());
-      return str_val;
-    }
+private:
+  char *stringify(std::string val)
+  {
+    char *str_val = new char[val.size() + 1];
+    strcpy(str_val, val.c_str());
+    return str_val;
+  }
 };
-
 
 class ConfSection;
 ////////////////////////////CONFIGURATION///////////////////////////////////////////////////////////////////////
-class Config {
+class Config
+{
 
-  public:
-    // typedef std::map<char*, std::map<const char*, QuantumProp*>> QMap;
-    typedef std::map<char*, ConfSection> QMap;
+public:
+  // typedef std::map<char*, std::map<const char*, QuantumProp*>> QMap;
+  typedef std::map<char *, ConfSection> QMap;
 
-    Config (const char* fname);
+  Config(const char *fname);
 
-    // operator overloads
-    friend std::ostream& operator<<(std::ostream& os, const Config& conf);
+  // operator overloads
+  friend std::ostream &operator<<(std::ostream &os, const Config &conf);
 
-    // functionality
-    ConfSection* getSection (const char* section_name);
-    QuantumProp* getValue(const char* section_name, const char* prop_key);
-    std::list<std::pair<char*, QuantumProp*>> getValue(const char* prop_key);
-    bool addEntry(char* section, std::pair<const char*, QuantumProp*> entry);
-    void save() const;
-    void save(const char* fname) const;
-    void save(std::string fname) const;
+  // functionality
+  ConfSection *getSection(const char *section_name);
+  QuantumProp *getValue(const char *section_name, const char *prop_key);
+  std::list<std::pair<char *, QuantumProp *>> getValue(const char *prop_key);
+  bool addEntry(char *section, std::pair<const char *, QuantumProp *> entry);
+  void save() const;
+  void save(const char *fname) const;
+  void save(std::string fname) const;
 
-  private:
-    // map of list to represent each key-value pair, separated by sections, within the list
-    QMap ini_data;
-    const char* file_name;
+private:
+  // map of list to represent each key-value pair, separated by sections, within the list
+  QMap ini_data;
+  const char *file_name;
 
-    bool isValid (std::string fname) const {
-      return fname.substr(fname.size()-4, 4).compare(".ini") == 0;
-    }
+  bool isValid(std::string fname) const
+  {
+    return fname.substr(fname.size() - 4, 4).compare(".ini") == 0;
+  }
 
-    std::string strip (std::string key);
-    std::string simplify (const char* value); // removes excess apostrophes, spaces, or line breaks in start and end of string
-    QuantumProp* getValueType (std::string value); // returns the value type as a QuantumProp
-    const char* getLineType (std::string line); // returns the type of the line based on its structure
+  std::string strip(std::string key);
+  std::string simplify(const char *value);      // removes excess apostrophes, spaces, or line breaks in start and end of string
+  QuantumProp *getValueType(std::string value); // returns the value type as a QuantumProp
+  const char *getLineType(std::string line);    // returns the type of the line based on its structure
 
-    // extracting values from lines
-    const char* extractSection (std::string line);
-    std::vector<const char*> extractKVPair (std::string line);
-    ConfSection* operator[](const char* section_name);
+  // extracting values from lines
+  const char *extractSection(std::string line);
+  std::vector<const char *> extractKVPair(std::string line);
+  ConfSection *operator[](const char *section_name);
 };
 
-class ConfSection {
-  public:
-    // TODO: might not need sect_name -- repetition
-    ConfSection (const char* sect_name);
-    typedef std::map<const char*, QuantumProp*> SMap;
+class ConfSection
+{
+public:
+  // TODO: might not need sect_name -- repetition
+  ConfSection(const char *sect_name);
+  typedef std::map<const char *, QuantumProp *> SMap;
 
-    friend std::ostream& operator<<(std::ostream& os, const ConfSection& c_section);
+  friend std::ostream &operator<<(std::ostream &os, const ConfSection &c_section);
 
-    // modifiers
-    bool addEntry(std::pair<const char*, QuantumProp*> new_entry);
-    bool removeEntry(const char* key_name);
-    bool updateEntry(std::pair<const char*, QuantumProp*> updated_entry);
-    QuantumProp* get(const char* key_name);
+  // modifiers
+  bool addEntry(std::pair<const char *, QuantumProp *> new_entry);
+  bool removeEntry(const char *key_name);
+  bool updateEntry(std::pair<const char *, QuantumProp *> updated_entry);
+  QuantumProp *get(const char *key_name);
 
-    // accessors
-    SMap::iterator begin() { return sect_map.begin(); }
-    SMap::iterator end() { return sect_map.end(); }
-    SMap::const_iterator begin() const { return sect_map.begin(); }
-    SMap::const_iterator end() const { return sect_map.end(); }
-    int size() const { return sect_map.size(); }
+  // accessors
+  SMap::iterator begin() { return sect_map.begin(); }
+  SMap::iterator end() { return sect_map.end(); }
+  SMap::const_iterator begin() const { return sect_map.begin(); }
+  SMap::const_iterator end() const { return sect_map.end(); }
+  int size() const { return sect_map.size(); }
 
-  private:
-    const char* section_name;
-    SMap sect_map;
-
+private:
+  const char *section_name;
+  SMap sect_map;
 };
 
 #endif
