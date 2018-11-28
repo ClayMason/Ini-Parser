@@ -215,6 +215,13 @@ std::string Config::simplify(const char *value)
   // given a string, simplify it by removing any empty characters that may be in front or behind
   // empty characters = (' ', '\r', '\n')
   std::string new_val(value);
+  printf("@@@Simplifying [%s] =>", value);
+
+  /* TODO 11/28/2018:
+  /* Before doing anything, start from rightmost of value and move left until a ";" or "#" is found.
+  /* Remove this part b/c it's 100% a comment that should not be part of the value
+  */
+
   while (new_val.substr(0, 1).compare("\"") == 0 || new_val.substr(0, 1).compare(" ") == 0 || new_val.substr(0, 1).compare("\n") == 0 || new_val.substr(0, 1).compare("\r") == 0)
   {
     // printf ("Removing a [%s]\n", new_val.substr(0, 1).c_str());
@@ -227,6 +234,7 @@ std::string Config::simplify(const char *value)
     new_val = new_val.substr(0, new_val.size() - 1);
   }
 
+  printf("[%s]\n", value);
   // printf ("\t new_val => [%s]\n", new_val.c_str());
   // printf ("\t\tPrefix Loop Count: %d\n\t\tSuffix Loop Count: %d\n", x, y);
   return new_val;
@@ -263,12 +271,13 @@ const char *Config::extractSection(std::string line)
 std::string Config::strip(std::string key)
 {
   std::string new_val(key);
+  printf("###Stripping [%s] => ", new_val.c_str());
   while (new_val.substr(0, 1).compare(" ") == 0)
     new_val = new_val.substr(1, new_val.size() - 1);
 
   while (new_val.substr(new_val.size() - 1, 1).compare(" ") == 0)
     new_val = new_val.substr(0, new_val.size() - 1);
-
+  printf("[%s]\n", new_val.c_str());
   return new_val;
 }
 
@@ -287,7 +296,7 @@ std::vector<const char *> Config::extractKVPair(std::string line)
   // Step 3 : Store the key and value into a char** and return it
   std::smatch match_;
   std::vector<const char *> kv_arr;
-  if (std::regex_search(line, match_, std::regex("^[^=^;]+(=){1}[^=^;]+")))
+  if (std::regex_search(line, match_, std::regex("^[^=^;]+(=){1}[^=]+")))
   {
     std::string result = std::string(match_[0]);
     std::stringstream ss(result);
