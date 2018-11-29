@@ -160,7 +160,7 @@ QuantumProp *Config::getValueType(std::string value)
   // printf ("[GET VALUE TYPE] => ");
   if (regex_isInt(value))
   {
-    printf("returning int value type\n");
+    printf("[INT] %s\n", value.c_str());
     std::stringstream ss(value);
     int int_val = 0;
     ss >> int_val;
@@ -171,7 +171,7 @@ QuantumProp *Config::getValueType(std::string value)
   }
   else if (regex_isBool(value))
   {
-    printf("returning bool value type\n");
+    printf("[BOOL] %s\n", value.c_str());
     bool bool_val;
     if (value.compare("Yes") == 0)
       bool_val = true;
@@ -184,7 +184,7 @@ QuantumProp *Config::getValueType(std::string value)
   }
   else if (regex_isFloat(value))
   {
-    printf("returning float value type\n");
+    printf("[FLOAT] %s\n", value.c_str());
 
     std::string new_val("0");
     new_val.append(value).append("0");
@@ -196,14 +196,15 @@ QuantumProp *Config::getValueType(std::string value)
   }
   else if (regex_isPath(value))
   {
-    printf("returning path value type\n");
+    printf("[PATH] %s\n", value.c_str());
     PathProp *prop = new PathProp(value);
     QuantumProp *master = prop;
     return master;
   }
   else
   {
-    printf("returning string value type\n");
+    printf("[STRING] %s\n", value.c_str());
+    printf("=>String val: %s\n", value.c_str());
     StringProp *prop = new StringProp(value);
     QuantumProp *master = prop;
     return master;
@@ -217,24 +218,19 @@ std::string Config::simplify(const char *value)
   std::string new_val(value);
   printf("@@@Simplifying [%s] =>", value);
 
-  /* TODO 11/28/2018:
-   * Before doing anything, start from rightmost of value and move left until a ";" or "#" is found.
-   * Remove this part b/c it's 100% a comment that should not be part of the value
-  */
-
-  while (new_val.substr(0, 1).compare("\"") == 0 || new_val.substr(0, 1).compare(" ") == 0 || new_val.substr(0, 1).compare("\n") == 0 || new_val.substr(0, 1).compare("\r") == 0)
+  while (new_val.substr(0, 1).compare("'") == 0 || new_val.substr(0, 1).compare("\"") == 0 || new_val.substr(0, 1).compare(" ") == 0 || new_val.substr(0, 1).compare("\n") == 0 || new_val.substr(0, 1).compare("\r") == 0)
   {
     // printf ("Removing a [%s]\n", new_val.substr(0, 1).c_str());
     new_val = new_val.substr(1, new_val.size() - 1);
   }
 
-  while (new_val.substr(new_val.size() - 1, 1).compare("\"") == 0 || new_val.substr(new_val.size() - 1, 1).compare(" ") == 0 || new_val.substr(new_val.size() - 1, 1).compare("\n") == 0 || new_val.substr(new_val.size() - 1, 1).compare("\r") == 0)
+  while (new_val.substr(new_val.size() - 1, 1).compare("'") == 0 || new_val.substr(new_val.size() - 1, 1).compare("\"") == 0 || new_val.substr(new_val.size() - 1, 1).compare(" ") == 0 || new_val.substr(new_val.size() - 1, 1).compare("\n") == 0 || new_val.substr(new_val.size() - 1, 1).compare("\r") == 0)
   {
     // printf ("Removing a [%s]\n",  new_val.substr(new_val.size() - 1, 1).c_str());
     new_val = new_val.substr(0, new_val.size() - 1);
   }
 
-  printf("[%s]\n", value);
+  printf("[%s]\n", new_val.c_str());
   // printf ("\t new_val => [%s]\n", new_val.c_str());
   // printf ("\t\tPrefix Loop Count: %d\n\t\tSuffix Loop Count: %d\n", x, y);
   return new_val;
@@ -469,7 +465,11 @@ void Config::save(const char *fname) const
         printf("=");
         printf("%s", s_itr->second->strValue());
         printf("\n");
-        out_file << s_itr->first << " = " << s_itr->second->strValue() << "\n";
+
+        if (strcmp(s_itr->second->getType(), "string") == 0)
+          out_file << s_itr->first << " = \"" << s_itr->second->strValue() << "\"\n";
+        else
+          out_file << s_itr->first << " = " << s_itr->second->strValue() << "\n";
         ++s_itr;
       }
     }
@@ -489,7 +489,10 @@ void Config::save(const char *fname) const
         s_itr = q_itr->second.begin();
         while (s_itr != q_itr->second.end())
         {
-          out_file << s_itr->first << " = " << s_itr->second->strValue() << "\n";
+          if (strcmp(s_itr->second->getType(), "string") == 0)
+            out_file << s_itr->first << " = \"" << s_itr->second->strValue() << "\"\n";
+          else
+            out_file << s_itr->first << " = " << s_itr->second->strValue() << "\n";
           ++s_itr;
         }
         out_file << "\n";
