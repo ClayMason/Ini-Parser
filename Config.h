@@ -8,6 +8,7 @@
 #include <list>
 #include <stdio.h>
 #include <cstring>
+#include <stdexcept>
 #include <iostream>
 #include <vector>
 
@@ -223,6 +224,7 @@ struct cmp_str
 ///////////////////////////////////////////////////////////////////////////////
 
 class ConfSection;
+class ConfigParseException;
 ////////////////////////////CONFIGURATION///////////////////////////////////////////////////////////////////////
 class Config
 {
@@ -237,6 +239,8 @@ public:
   friend std::ostream &operator<<(std::ostream &os, const Config &conf);
 
   // functionality
+  // TODO: make init function and add error handeling.
+
   ConfSection *getSection(const char *section_name);
   QuantumProp *getValue(const char *section_name, const char *prop_key);
   std::list<std::pair<char *, QuantumProp *>> getValue(const char *prop_key);
@@ -266,6 +270,7 @@ private:
   ConfSection *operator[](const char *section_name);
 };
 
+////////////////////////////CONFSECTION///////////////////////////////////////////////////////////////////////
 class ConfSection
 {
 public:
@@ -293,4 +298,41 @@ private:
   SMap sect_map;
 };
 
+////////////////////////////CONFIG PARSE EXCEPTION///////////////////////////////////////////////////////////////////////
+class ConfigParseException : std::logic_error
+{
+
+private:
+  unsigned int err_code;
+
+public:
+  // Error codes
+  static const unsigned int MISSING_FILE = 1;
+  static const unsigned int SAVE_ERROR = 2;
+
+  ConfigParseException(unsigned int code_, const char *msg) : std::logic_error(msg)
+  {
+    this->err_code = code_;
+  }
+
+  unsigned int get_code() { return this->err_code; }
+
+  /*
+      * Given an error code, return a corresponding message that describes the code
+    */
+  static const char *get_error_message(unsigned int err_code)
+  {
+    switch (err_code)
+    {
+    case ConfigParseException::MISSING_FILE:
+      return "Could not find the file specified";
+      break;
+    case ConfigParseException::SAVE_ERROR:
+      return "Problem saving the data to the ini config file";
+      break;
+    default:
+      return "undefined error";
+    }
+  }
+};
 #endif
