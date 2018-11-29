@@ -216,7 +216,6 @@ std::string Config::simplify(const char *value)
   // given a string, simplify it by removing any empty characters that may be in front or behind
   // empty characters = (' ', '\r', '\n')
   std::string new_val(value);
-  printf("@@@Simplifying [%s] =>", value);
 
   while (new_val.substr(0, 1).compare("'") == 0 || new_val.substr(0, 1).compare("\"") == 0 || new_val.substr(0, 1).compare(" ") == 0 || new_val.substr(0, 1).compare("\n") == 0 || new_val.substr(0, 1).compare("\r") == 0)
   {
@@ -233,6 +232,8 @@ std::string Config::simplify(const char *value)
   printf("[%s]\n", new_val.c_str());
   // printf ("\t new_val => [%s]\n", new_val.c_str());
   // printf ("\t\tPrefix Loop Count: %d\n\t\tSuffix Loop Count: %d\n", x, y);
+  if (DEBUG)
+    printf("Config::simplify()\t->\tsimplified [%s] to [%s]", value, new_val.c_str());
   return new_val;
 }
 
@@ -267,13 +268,14 @@ const char *Config::extractSection(std::string line)
 std::string Config::strip(std::string key)
 {
   std::string new_val(key);
-  printf("###Stripping [%s] => ", new_val.c_str());
   while (new_val.substr(0, 1).compare(" ") == 0)
     new_val = new_val.substr(1, new_val.size() - 1);
 
   while (new_val.substr(new_val.size() - 1, 1).compare(" ") == 0)
     new_val = new_val.substr(0, new_val.size() - 1);
-  printf("[%s]\n", new_val.c_str());
+
+  if (DEBUG)
+    printf("Config::strip()\t\t->\tStripping [%s] to [%s]\n", key.c_str(), new_val.c_str());
   return new_val;
 }
 
@@ -364,13 +366,31 @@ std::vector<const char *> Config::extractKVPair(std::string line)
 // the map pointer may be assigned or be 0. If the bool is false, then the map is null, otherwise, it is not.
 ConfSection *Config::getSection(const char *section_name)
 {
-  char s_name[strlen(section_name) + 1];
-  strcpy(s_name, section_name);
-  Config::QMap::iterator q_itr = ini_data.find(s_name);
-  if (q_itr == ini_data.end())
-    return 0;
+  char *s_name;
+  if (section_name == 0)
+  {
+    s_name = new char[12];
+    strcpy(s_name, "<unlabeled>");
+  }
   else
+  {
+    s_name = new char[strlen(section_name) + 1];
+    strcpy(s_name, section_name);
+  }
+  Config::QMap::iterator q_itr = ini_data.find(s_name);
+  delete s_name;
+  if (q_itr == ini_data.end())
+  {
+    if (DEBUG)
+      printf("Config::getSection(%s)\t->\tfailed\n", section_name);
+    return 0;
+  }
+  else
+  {
+    if (DEBUG)
+      printf("Config::getSection(%s)\t->\tpassed\n", section_name);
     return &(q_itr->second);
+  }
 }
 
 // Given section name, and property key, return pointer to property value if exists, or null ptr otherwise
@@ -409,24 +429,21 @@ bool Config::addEntry(char *section, std::pair<const char *, QuantumProp *> entr
   // section should not be null anymore...
   QMap::iterator q_itr = ini_data.find(section);
 
-  /// DEBUGGING ///
-  bool CHECK = q_itr == ini_data.end();
-  printf("Result when trying to add [%s] => ", entry.first);
-  if (CHECK)
-    printf("Section %s does not exist. Creating [%s]\n", section, section);
-  else
-    printf("Section %s already exists. Adding to existing...\n", section);
-  /// END DEBUGGING ///
-
   if (q_itr == ini_data.end())
   { // if the iterator could not find the section, create the section and add it
     // create the section and add it to the list
     ConfSection s(section);
     std::pair<QMap::iterator, bool> ret = ini_data.insert(std::pair<char *, ConfSection>(section, s));
     q_itr = ret.first;
+    if (DEBUG)
+      printf("Config::addEntry()\t->\tcreating section %s and adding %s\n", section, entry.first);
   }
   else
+  {
+    if (DEBUG)
+      printf("Config::addEntry()\t->\tadding %s to already-created section %s\n", entry.first, section);
     delete section; // section exists already so delete the new variable created in 1st if.
+  }
   return q_itr->second.addEntry(entry);
 }
 
@@ -605,12 +622,14 @@ bool ConfSection::addEntry(std::pair<const char *, QuantumProp *> new_entry)
     return false;
   else
   {
-    printf("Attempting to add [%s=%s]\n", new_entry.first, new_entry.second->strValue());
     std::pair<SMap::iterator, bool> result = sect_map.insert(std::pair<const char *, QuantumProp *>(new_entry.first, new_entry.second));
-    if (result.second)
-      printf("Entry added ... size = %d\n", this->size());
-    else
-      printf("Error adding %s to %s ... \n", new_entry.first, this->section_name);
+    if (DEBUG)
+    {
+      if (result.second)
+        printf("ConfSection::addEntry()\t->\tentry (%s = %s) added [size=%d]\n", new_entry.first, new_entry.second->strValue(), this->size());
+      else
+        printf("ConfSection::addEntry()\t->\tfailed adding %s to %s\n", new_entry.first, this->get_name());
+    }
     return result.second;
   }
 }
@@ -619,6 +638,13 @@ bool ConfSection::removeEntry(const char *key_name)
 {
   // return true if anything was erased
   int result = sect_map.erase(key_name);
+  if (DEBUG)
+  {
+    if (result)
+      printf("ConfSection::removeEntry(%s)\t-\tpassed\n", key_name);
+    else
+      printf("ConfSection::removeEntry(%s)\t-\tfailed", key_name);
+  }
   return result > 0;
 }
 
@@ -642,4 +668,9 @@ bool ConfSection::updateEntry(std::pair<const char *, QuantumProp *> updated_ent
     s_itr->second = updated_entry.second;
 
   return true;
+}
+
+bool ConfSection::operator==(const ConfSection &other)
+{
+  return &(this->sect_map) == &(other.sect_map);
 }

@@ -6,6 +6,7 @@
 #include <string.h>
 #include <cstring>
 #include <fstream>
+#include <cassert>
 #include <iostream>
 #include "Config.h"
 
@@ -36,6 +37,7 @@ int main()
         printf("[%s] opened successfully !\n", fname.c_str());
         Config _config(std::string("samples/").append(fname).c_str());
 
+        // Test 1 : Config::addEntry() tests -- WORKS
         //bool Config::addEntry(char* section, std::pair<const char*, QuantumProp*> entry)
         for (int j = 1; j < 10; ++j)
         {
@@ -49,9 +51,33 @@ int main()
           _config.addEntry(0, std::pair<const char *, QuantumProp *>(key_name, q_prop));
         }
 
-        //
+        // Test 2 : Config::getSection() tests -- WORKS
+        std::cout << "\nGetSection() Tests" << std::endl;
+        std::cout << "Section 1:\n"
+                  << *(_config.getSection("SectionOne")) << std::endl;
+        std::cout << "Section 2:\n"
+                  << *(_config.getSection("SectionTwo")) << std::endl;
+        std::cout << "<unlabeled>:\n"
+                  << *(_config.getSection(0)) << std::endl; // print the <unlabeled> section
+        assert(*(_config.getSection(0)) == *(_config.getSection("<unlabeled>")));
 
-        std::cout << _config << std::endl;
+        // std::cout << _config << std::endl; // => Config Print WORKS
+
+        // Test 3 : ConfSection::removeEntry ()
+        ConfSection *section_1 = _config.getSection("SectionOne");
+        assert(section_1 != 0);
+        std::cout << "Test 3 - ConfSection::remmoveEntry()\n";
+        section_1->removeEntry("string1");
+        section_1->removeEntry("string2");
+        section_1->removeEntry("key");
+        section_1->removeEntry("integer");
+        section_1->removeEntry("real");
+        section_1->removeEntry("multivalue[]");
+        section_1->removeEntry("multivalue[]");
+
+        std::cout << std::endl;
+        std::cout << *(section_1) << std::endl
+                  << std::endl;
 
         std::cout << "Saving " << fname << " to "
                   << "out_" << fname << std::endl;

@@ -12,6 +12,8 @@
 #include <iostream>
 #include <vector>
 
+#define DEBUG true
+
 /*
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 DOCUMENTATION
@@ -276,12 +278,12 @@ class ConfSection
 public:
   // TODO: might not need sect_name -- repetition
   ConfSection(const char *sect_name);
-  typedef std::map<const char *, QuantumProp *> SMap;
+  typedef std::map<const char *, QuantumProp *, cmp_str> SMap;
 
   friend std::ostream &operator<<(std::ostream &os, const ConfSection &c_section);
 
   // modifiers
-  bool addEntry(std::pair<const char *, QuantumProp *> new_entry);
+  bool addEntry(std::pair<const char *, QuantumProp *> new_entry); // works
   bool removeEntry(const char *key_name);
   bool updateEntry(std::pair<const char *, QuantumProp *> updated_entry);
   QuantumProp *get(const char *key_name);
@@ -292,6 +294,8 @@ public:
   SMap::const_iterator begin() const { return sect_map.begin(); }
   SMap::const_iterator end() const { return sect_map.end(); }
   int size() const { return sect_map.size(); }
+  bool operator==(const ConfSection &other);
+  const char *get_name() { return section_name; }
 
 private:
   const char *section_name;
