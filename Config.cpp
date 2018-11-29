@@ -218,8 +218,8 @@ std::string Config::simplify(const char *value)
   printf("@@@Simplifying [%s] =>", value);
 
   /* TODO 11/28/2018:
-  /* Before doing anything, start from rightmost of value and move left until a ";" or "#" is found.
-  /* Remove this part b/c it's 100% a comment that should not be part of the value
+   * Before doing anything, start from rightmost of value and move left until a ";" or "#" is found.
+   * Remove this part b/c it's 100% a comment that should not be part of the value
   */
 
   while (new_val.substr(0, 1).compare("\"") == 0 || new_val.substr(0, 1).compare(" ") == 0 || new_val.substr(0, 1).compare("\n") == 0 || new_val.substr(0, 1).compare("\r") == 0)
@@ -296,6 +296,55 @@ std::vector<const char *> Config::extractKVPair(std::string line)
   // Step 3 : Store the key and value into a char** and return it
   std::smatch match_;
   std::vector<const char *> kv_arr;
+
+  // remove comments from the line if there is
+  bool in_quotes = 0;      // false
+  uint8_t quotes_type = 0; // 1 = single quotes, 2 = double quotes
+  unsigned int comment_start = line.size();
+  unsigned int i = 0;
+
+  while (i < comment_start)
+  {
+    if (!in_quotes && (line.substr(i, 1).compare(std::string("#")) == 0 || line.substr(i, 1).compare(std::string(";")) == 0))
+    {
+      comment_start = i;
+    }
+    else
+    {
+      if (!in_quotes)
+      { // when not in quotes
+        if (line.substr(i, 1).compare(std::string("\"")) == 0)
+        {
+          in_quotes = true;
+          quotes_type = 2;
+        }
+        else if (line.substr(i, 1).compare(std::string("'")) == 0)
+        {
+          in_quotes = true;
+          quotes_type = 1;
+        }
+      }
+      else
+      { // when in quotes
+        if (line.substr(i, 1).compare(std::string("\"")) == 0 && quotes_type == 2)
+        {
+          in_quotes = false;
+          quotes_type = 0;
+        }
+        else if (line.substr(i, 1).compare("'") == 0 && quotes_type == 1)
+        {
+          in_quotes = false;
+          quotes_type = 0;
+        }
+      }
+    }
+    ++i;
+  } // end while
+
+  if (comment_start < line.size())
+    line = line.substr(0, comment_start);
+
+  // split into key-value pair
   if (std::regex_search(line, match_, std::regex("^[^=^;]+(=){1}[^=]+")))
   {
     std::string result = std::string(match_[0]);
