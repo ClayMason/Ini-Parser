@@ -37,8 +37,20 @@ int main()
         printf("[%s] opened successfully !\n", fname.c_str());
         Config _config(std::string("samples/").append(fname).c_str());
 
+        try
+        {
+          _config.init(); // initialize config from file given
+        }
+        catch (ConfigParseException &e)
+        {
+          std::cout << "Error code " << e.get_code() << ": " << e.get_msg() << std::endl;
+        }
+        catch (std::exception &e)
+        {
+          std::cout << e.what() << std::endl;
+        }
+
         // Test 1 : Config::addEntry() tests -- WORKS
-        //bool Config::addEntry(char* section, std::pair<const char*, QuantumProp*> entry)
         for (int j = 1; j < 10; ++j)
         {
           IntProp *new_int = new IntProp(j * 1000);

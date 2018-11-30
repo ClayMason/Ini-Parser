@@ -10,24 +10,38 @@
 
 Config::Config(const char *fname)
 {
-  this->file_name = fname;
-  // default constructor - if the filename does not exist, create empty file
-  // otherwise, read file
-  if (!isValid(std::string(fname)))
-    throw "Invalid filetype. (Expected .ini file)\n";
+  this->file_name = new char[strlen(fname) + 1];
+  strcpy(this->file_name, fname);
+  this->is_init = false;
+}
+
+bool Config::init()
+{
+  // given a filename (member var), initialize Config.
+  printf("Hol up ... [%s]...?\n", this->file_name);
+  if (!isValid(std::string(this->file_name)))
+  {
+    throw ConfigParseException(ConfigParseErr::INVALID_FILETYPE, ConfigParseErr::get_error_message(ConfigParseErr::INVALID_FILETYPE));
+    return false;
+  }
   std::ifstream ini_file;
-  ini_file.open(fname);
+  ini_file.open(this->file_name);
 
   if (!ini_file)
-    throw std::string("Could not open file ").append(fname).c_str();
-  printf("Successfully opened %s\n", fname);
+  {
+    throw ConfigParseException(ConfigParseErr::OPEN_ERROR, ConfigParseErr::get_error_message(ConfigParseErr::OPEN_ERROR));
+    return false;
+  }
+  if (DEBUG)
+    printf("Successfully opened %s\n", this->file_name);
 
   // Parse file information
   std::string line;
-  int x = 0;
+  this->is_init = true;
 
   // TODO get rid of x variable ( above and in while loop and print statement )
-  printf("\nContents of [%s]\n", fname);
+  if (DEBUG)
+    printf("\nContents of [%s]\n", this->file_name);
   std::string section_label("<unlabeled>");
   char *new_section = new char[section_label.size() + 1];
   strcpy(new_section, section_label.c_str());
@@ -42,15 +56,15 @@ Config::Config(const char *fname)
       strcpy(new_section, section_label.c_str());
     }
 
-    ++x;
     const char *line_type = this->getLineType(line);
-    printf("Line #%d => %s \t(Line Type = %s)\n", x, line.c_str(), line_type);
 
     if (strcmp(line_type, "section") == 0)
     {
-      printf("\t====> Section Name: %s\n", this->extractSection(line));
+      if (DEBUG)
+        printf("\t====> Section Name: %s\n", this->extractSection(line));
       section_label = this->extractSection(line);
-      printf("Section Label => %s\n", section_label.c_str());
+      if (DEBUG)
+        printf("Section Label => %s\n", section_label.c_str());
     }
     else if (strcmp(line_type, "kvpair") == 0)
     {
@@ -68,34 +82,22 @@ Config::Config(const char *fname)
       }
 
       // now add the entry to the map
-      // printf("P1\n");
       std::vector<const char *> kv_arr = this->extractKVPair(line);
-      // printf ("\tLeft: %s\tRight: %s\n", kv_arr[0], kv_arr[1]);
-      // printf("P2\n");
       std::string val = simplify(kv_arr[1]);
-      // printf("P3\n");
       QuantumProp *q_prop = getValueType(val);
-      // printf("P4\n");
       std::pair<const char *, QuantumProp *> entry(kv_arr[0], q_prop);
-      // printf("P5\n");
       q_itr->second.addEntry(entry);
-      // printf("P6\n");
     }
   } // end while
-  printf("End while \n");
+  return true;
 }
 
-/*
-* Regex strings:
-- Section Match: ^(\[){1}[^[]+(]){1}$
-- Comment Match: (;)+(.*)
-- Key-Value: (.*)(=){1}(.*)   => Search for key and value with: [^=]+
-  - For value parsing:
-      - Int: [0-9]+
-      - Float: [0-9]+(\.){1}[0-9]+
-      - Bool: (Yes|No){1}
-      - Path ? : ([a-zA-Z]+(:)?)?([\/]+)?([a-zA-Z0-9_]+(\/)?)+
-*/
+void Config::check_init() const
+{
+  // check if Config is initialized. if not, throw exception
+  if (!this->is_init)
+    ConfigParseException(ConfigParseErr::NOT_INITIALIZED, ConfigParseErr::get_error_message(ConfigParseErr::NOT_INITIALIZED));
+}
 
 bool regex_isInt(std::string value)
 {
@@ -155,6 +157,7 @@ bool regex_isPath(std::string value)
 
 QuantumProp *Config::getValueType(std::string value)
 {
+  check_init();
   // determine whether a value is an int, string, path, float, bool, or nil (not applicable to any)
   // 0 = int, 1 = string, 2 = path, 3 = float, 4 = bool
   // printf ("[GET VALUE TYPE] => ");
@@ -231,6 +234,7 @@ std::string Config::simplify(const char *value)
 
 std::list<char *> Config::getSections()
 {
+  check_init();
   std::list<char *> all_sections;
   QMap::iterator q_itr;
   for (q_itr = ini_data.begin(); q_itr != ini_data.end(); ++q_itr)
@@ -369,6 +373,7 @@ std::vector<const char *> Config::extractKVPair(std::string line)
 // the map pointer may be assigned or be 0. If the bool is false, then the map is null, otherwise, it is not.
 ConfSection *Config::getSection(const char *section_name)
 {
+  check_init();
   char *s_name;
   if (section_name == 0)
   {
@@ -399,6 +404,7 @@ ConfSection *Config::getSection(const char *section_name)
 // Given section name, and property key, return pointer to property value if exists, or null ptr otherwise
 QuantumProp *Config::getValue(const char *section_name, const char *prop_key)
 {
+  check_init();
   ConfSection *section = this->getSection(section_name);
   if (section == 0)
     return 0;
@@ -408,6 +414,7 @@ QuantumProp *Config::getValue(const char *section_name, const char *prop_key)
 // QuantumProp::Pair == std::pair<char *, QuantumProp *>
 std::list<QuantumProp::Pair> Config::getValue(const char *prop_key)
 {
+  check_init();
   QMap::iterator q_itr = ini_data.begin();
   std::list<std::pair<char *, QuantumProp *>> lst;
   while (q_itr != ini_data.end())
@@ -425,6 +432,7 @@ std::list<QuantumProp::Pair> Config::getValue(const char *prop_key)
 //unlabeled
 bool Config::addEntry(char *section, std::pair<const char *, QuantumProp *> entry)
 {
+  check_init();
   if (section == 0)
   {
     section = new char[12];
@@ -452,6 +460,7 @@ bool Config::addEntry(char *section, std::pair<const char *, QuantumProp *> entr
 
 void Config::save(const char *fname) const
 {
+  check_init();
   // save the ini_data into fname -- should end in .ini
   printf("Saving to %s\n", fname);
   if (!isValid(std::string(fname)))

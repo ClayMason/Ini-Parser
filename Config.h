@@ -247,6 +247,7 @@ struct cmp_str
 
 class ConfSection;
 class ConfigParseException;
+struct ConfigParseErr;
 ////////////////////////////CONFIGURATION///////////////////////////////////////////////////////////////////////
 class Config
 {
@@ -256,6 +257,7 @@ public:
   typedef std::map<char *, ConfSection, cmp_str> QMap;
 
   Config(const char *fname);
+  bool init(); // throws exceptions
 
   // operator overloads
   friend std::ostream &operator<<(std::ostream &os, const Config &conf);
@@ -276,7 +278,8 @@ public:
 private:
   // map of list to represent each key-value pair, separated by sections, within the list
   QMap ini_data;
-  const char *file_name;
+  char *file_name;
+  bool is_init;
 
   bool isValid(std::string fname) const
   {
@@ -287,6 +290,7 @@ private:
   std::string simplify(const char *value);      // removes excess apostrophes, spaces, or line breaks in start and end of string
   QuantumProp *getValueType(std::string value); // returns the value type as a QuantumProp
   const char *getLineType(std::string line);    // returns the type of the line based on its structure
+  void check_init() const;
 
   // extracting values from lines
   const char *extractSection(std::string line);
@@ -326,40 +330,60 @@ private:
 };
 
 ////////////////////////////CONFIG PARSE EXCEPTION///////////////////////////////////////////////////////////////////////
-class ConfigParseException : std::logic_error
+struct ConfigParseErr
 {
-
-private:
-  unsigned int err_code;
-
-public:
-  // Error codes
   static const unsigned int MISSING_FILE = 1;
   static const unsigned int SAVE_ERROR = 2;
+  static const unsigned int INVALID_FILETYPE = 3;
+  static const unsigned int OPEN_ERROR = 4;
+  static const unsigned int NOT_INITIALIZED = 5;
 
-  ConfigParseException(unsigned int code_, const char *msg) : std::logic_error(msg)
-  {
-    this->err_code = code_;
-  }
-
-  unsigned int get_code() { return this->err_code; }
-
-  /*
-      * Given an error code, return a corresponding message that describes the code
-    */
   static const char *get_error_message(unsigned int err_code)
   {
     switch (err_code)
     {
-    case ConfigParseException::MISSING_FILE:
+    case ConfigParseErr::INVALID_FILETYPE:
+      return "Invalid file type. Expects (.ini) file";
+      break;
+    case ConfigParseErr::MISSING_FILE:
       return "Could not find the file specified";
       break;
-    case ConfigParseException::SAVE_ERROR:
+    case ConfigParseErr::SAVE_ERROR:
       return "Problem saving the data to the ini config file";
+      break;
+    case ConfigParseErr::OPEN_ERROR:
+      return "Could not open file";
+      break;
+    case ConfigParseErr::NOT_INITIALIZED:
+      return "Config is not initialized. Call init().";
       break;
     default:
       return "undefined error";
     }
   }
+};
+
+class ConfigParseException : std::logic_error
+{
+
+private:
+  unsigned int err_code;
+  const char *msg;
+
+public:
+  // Error codes
+
+  ConfigParseException(unsigned int code_, const char *msg) : std::logic_error(msg)
+  {
+    this->err_code = code_;
+    this->msg = msg;
+  }
+
+  unsigned int get_code() { return this->err_code; }
+  const char *get_msg() { return this->msg; }
+
+  /*
+      * Given an error code, return a corresponding message that describes the code
+    */
 };
 #endif
