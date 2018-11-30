@@ -105,6 +105,8 @@ protected:
   char *str_value;
 
 public:
+  typedef std::pair<char *, QuantumProp *> Pair;
+
   QuantumProp() : type(0), str_value(0) {}
   QuantumProp(const char *_type) : type(_type), str_value(0) {}
   ~QuantumProp() {}
@@ -118,12 +120,16 @@ public:
   const char *getType() { return type; }
   char *strValue() { return str_value; }
 
+  // printing
+  friend std::ostream &operator<<(std::ostream &os, const QuantumProp &prop);
+
   /*
    * Create static function should convert the given type into a QuantumProp object
    * that can be downcasted to its appropriate child class (IntProp, BoolProp, etc.).
   */
   static QuantumProp *create(int val);
   static QuantumProp *create(float val);
+  static QuantumProp *create(double val);
   static QuantumProp *create(char *val);
   static QuantumProp *create(const char *val);
   static QuantumProp *create(std::string val);
@@ -257,9 +263,10 @@ public:
   // functionality
   // TODO: make init function and add error handeling.
 
+  std::list<char *> getSections();
   ConfSection *getSection(const char *section_name);
   QuantumProp *getValue(const char *section_name, const char *prop_key);
-  std::list<std::pair<char *, QuantumProp *>> getValue(const char *prop_key);
+  std::list<QuantumProp::Pair> getValue(const char *prop_key);
   bool addEntry(char *section, std::pair<const char *, QuantumProp *> entry);
   void save() const;
   void save(const char *fname) const;

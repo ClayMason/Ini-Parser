@@ -229,6 +229,17 @@ std::string Config::simplify(const char *value)
   return new_val;
 }
 
+std::list<char *> Config::getSections()
+{
+  std::list<char *> all_sections;
+  QMap::iterator q_itr;
+  for (q_itr = ini_data.begin(); q_itr != ini_data.end(); ++q_itr)
+  {
+    all_sections.push_back(q_itr->first);
+  }
+  return all_sections;
+}
+
 // getLineType => Determines whether the line is a section title, comment, or key-value pair ( or none of the above )
 const char *Config::getLineType(std::string line)
 {
@@ -394,7 +405,8 @@ QuantumProp *Config::getValue(const char *section_name, const char *prop_key)
   return section->get(prop_key);
 }
 
-std::list<std::pair<char *, QuantumProp *>> Config::getValue(const char *prop_key)
+// QuantumProp::Pair == std::pair<char *, QuantumProp *>
+std::list<QuantumProp::Pair> Config::getValue(const char *prop_key)
 {
   QMap::iterator q_itr = ini_data.begin();
   std::list<std::pair<char *, QuantumProp *>> lst;
@@ -593,6 +605,12 @@ ConfSection *Config::operator[](const char *section_name)
   return &(itr->second);
 }
 
+std::ostream &operator<<(std::ostream &os, const QuantumProp &prop)
+{
+  os << prop.str_value;
+  return os;
+}
+
 /////////////////////////////////////////////////////////////////////////////////
 /////////////////////////////////////////////////////////////////////////////////
 /////////////////////////////////////////////////////////////////////////////////
@@ -644,9 +662,17 @@ QuantumProp *ConfSection::get(const char *key_name)
   // find key_name from sect_map
   SMap::iterator res = sect_map.find(key_name);
   if (res == sect_map.end())
+  {
+    if (DEBUG)
+      printf("ConfSection::get()\t->\t%s is not in section %s\n", key_name, this->get_name());
     return 0;
+  }
   else
+  {
+    if (DEBUG)
+      printf("ConfSection::get()\t->\t successfully retrieved %s from section %s\n", key_name, this->get_name());
     return res->second;
+  }
 }
 
 bool ConfSection::updateEntry(const char *update_key, QuantumProp *updated_val)
@@ -661,13 +687,13 @@ bool ConfSection::updateEntry(std::pair<const char *, QuantumProp *> updated_ent
   if (s_itr == sect_map.end())
   {
     if (DEBUG)
-      printf("ConfSection::updateEntry\t->\tfailed. key %s does not exist", updated_entry.first);
+      printf("ConfSection::updateEntry\t->\tfailed. key %s does not exist\n", updated_entry.first);
     return false;
   }
   else
     s_itr->second = updated_entry.second;
   if (DEBUG)
-    printf("ConfSection::updateEntry\t->\tsuccess");
+    printf("ConfSection::updateEntry\t->\tsuccess\n");
   return true;
 }
 
@@ -742,4 +768,9 @@ QuantumProp *QuantumProp::create(const char *val)
 QuantumProp *QuantumProp::create(const char *val, bool is_path)
 {
   return QuantumProp::create((char *)val, is_path);
+}
+
+QuantumProp *QuantumProp::create(double val)
+{
+  return QuantumProp::create((float)val);
 }

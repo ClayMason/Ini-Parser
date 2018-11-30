@@ -71,26 +71,53 @@ int main()
         section_1->removeEntry("string2");
         section_1->removeEntry("key");
         section_1->removeEntry("integer");
-        section_1->removeEntry("real");
-        section_1->removeEntry("multivalue[]");
-        section_1->removeEntry("multivalue[]");
 
-        // Test 4 : ConfSection::updateEntry ()
+        // Test 4 : ConfSection::updateEntry () -- WORKS
         std::cout << "\nTest 4 - ConfSection::updateEntry()\n";
+        std::cout << *section_1 << std::endl
+                  << section_1->size() << std::endl
+                  << std::endl;
         section_1->addEntry(std::pair<const char *, QuantumProp *>("new_entry", QuantumProp::create("this is surely a new entry")));
         std::cout << *section_1 << std::endl;
         std::cout << "\nUpdating \"new_entry\"...\n"
                   << std::endl;
         section_1->updateEntry("new_entry", QuantumProp::create("UwU"));
-        std::cout << *section_1 << std::endl
-                  << std::endl;
+        std::cout << *section_1 << std::endl;
 
-        std::cout << std::endl;
-        std::cout << *(section_1) << std::endl
-                  << std::endl;
+        std::cout << "Updating to a different data type." << std::endl;
+        section_1->updateEntry("new_entry", QuantumProp::create(3.14));
+        std::cout << *section_1 << std::endl;
 
-        std::cout << "Saving " << fname << " to "
-                  << "out_" << fname << std::endl;
+        // Test 5 : ConfSection::get () -- WORKS
+        QuantumProp *query_1 = section_1->get("multivalue[]");
+        QuantumProp *query_2 = section_1->get("yerrr");
+        assert(query_1 != 0);
+        assert(query_2 == 0);
+        std::cout << "Quantum value retrieved -> " << *query_1 << std::endl;
+
+        // Test 6 :  Config::getValue(prop_)
+        std::list<QuantumProp::Pair> repeats = _config.getValue("repeat");
+        std::cout << "\nTest 6 -- getValue(prop)" << std::endl;
+        std::cout << "size : " << repeats.size() << std::endl;
+
+        std::list<QuantumProp::Pair>::iterator lst_itr;
+        for (lst_itr = repeats.begin(); lst_itr != repeats.end(); ++lst_itr)
+        {
+          std::cout << "\t [Section: " << lst_itr->first << "] => repeat = " << *(lst_itr->second) << std::endl;
+        }
+
+        // Test 7 : Config::getValue(section, prop) -- Works
+        std::cout << "\nTest 7 -- getValue(section, prop)" << std::endl;
+        std::list<char *> sections = _config.getSections();
+        std::list<char *>::iterator sect_iter = sections.begin();
+        std::cout << "First Section is " << *sect_iter << std::endl;
+        QuantumProp *get_test = _config.getValue(*sect_iter, "sample_get");
+        std::cout << "Config.get() returned \"" << *get_test << "\"from \"sample_get\" in " << *sect_iter << " section" << std::endl;
+
+        // Saving -- Works !
+        std::cout
+            << "Saving " << fname << " to "
+            << "out_" << fname << std::endl;
         _config.save(std::string("out/").append(fname).c_str());
       }
     }
