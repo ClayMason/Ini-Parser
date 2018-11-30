@@ -117,6 +117,20 @@ public:
   bool isPath() { return type != 0 && strcmp(type, "path") == 0; }
   const char *getType() { return type; }
   char *strValue() { return str_value; }
+
+  /*
+   * Create static function should convert the given type into a QuantumProp object
+   * that can be downcasted to its appropriate child class (IntProp, BoolProp, etc.).
+  */
+  static QuantumProp *create(int val);
+  static QuantumProp *create(float val);
+  static QuantumProp *create(char *val);
+  static QuantumProp *create(const char *val);
+  static QuantumProp *create(std::string val);
+  static QuantumProp *create(bool val);
+  static QuantumProp *create(char *val, bool is_path);
+  static QuantumProp *create(const char *val, bool is_path);
+  static QuantumProp *create(std::string val, bool is_path);
 };
 
 ////////////////////////////INT PROP////////////////////////////////
@@ -286,6 +300,7 @@ public:
   bool addEntry(std::pair<const char *, QuantumProp *> new_entry); // works
   bool removeEntry(const char *key_name);
   bool updateEntry(std::pair<const char *, QuantumProp *> updated_entry);
+  bool updateEntry(const char *update_key, QuantumProp *updated_val);
   QuantumProp *get(const char *key_name);
 
   // accessors

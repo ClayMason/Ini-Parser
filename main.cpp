@@ -66,7 +66,7 @@ int main()
         // Test 3 : ConfSection::removeEntry ()
         ConfSection *section_1 = _config.getSection("SectionOne");
         assert(section_1 != 0);
-        std::cout << "Test 3 - ConfSection::remmoveEntry()\n";
+        std::cout << "\n\nTest 3 - ConfSection::remmoveEntry()\n";
         section_1->removeEntry("string1");
         section_1->removeEntry("string2");
         section_1->removeEntry("key");
@@ -74,6 +74,16 @@ int main()
         section_1->removeEntry("real");
         section_1->removeEntry("multivalue[]");
         section_1->removeEntry("multivalue[]");
+
+        // Test 4 : ConfSection::updateEntry ()
+        std::cout << "\nTest 4 - ConfSection::updateEntry()\n";
+        section_1->addEntry(std::pair<const char *, QuantumProp *>("new_entry", QuantumProp::create("this is surely a new entry")));
+        std::cout << *section_1 << std::endl;
+        std::cout << "\nUpdating \"new_entry\"...\n"
+                  << std::endl;
+        section_1->updateEntry("new_entry", QuantumProp::create("UwU"));
+        std::cout << *section_1 << std::endl
+                  << std::endl;
 
         std::cout << std::endl;
         std::cout << *(section_1) << std::endl

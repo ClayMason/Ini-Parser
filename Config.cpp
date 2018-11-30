@@ -165,9 +165,7 @@ QuantumProp *Config::getValueType(std::string value)
     int int_val = 0;
     ss >> int_val;
 
-    IntProp *prop = new IntProp(int_val);
-    QuantumProp *master = prop;
-    return master;
+    return QuantumProp::create(int_val);
   }
   else if (regex_isBool(value))
   {
@@ -178,9 +176,7 @@ QuantumProp *Config::getValueType(std::string value)
     else
       bool_val = false;
 
-    BoolProp *prop = new BoolProp(bool_val);
-    QuantumProp *master = prop;
-    return master;
+    return QuantumProp::create(bool_val);
   }
   else if (regex_isFloat(value))
   {
@@ -190,24 +186,20 @@ QuantumProp *Config::getValueType(std::string value)
     new_val.append(value).append("0");
     float float_val = std::stof(new_val);
 
-    FloatProp *prop = new FloatProp(float_val);
-    QuantumProp *master = prop;
-    return master;
+    return QuantumProp::create(float_val);
   }
   else if (regex_isPath(value))
   {
     printf("[PATH] %s\n", value.c_str());
-    PathProp *prop = new PathProp(value);
-    QuantumProp *master = prop;
-    return master;
+
+    return QuantumProp::create(value, true);
   }
   else
   {
     printf("[STRING] %s\n", value.c_str());
     printf("=>String val: %s\n", value.c_str());
-    StringProp *prop = new StringProp(value);
-    QuantumProp *master = prop;
-    return master;
+
+    return QuantumProp::create(value);
   }
 }
 
@@ -435,8 +427,7 @@ bool Config::addEntry(char *section, std::pair<const char *, QuantumProp *> entr
     ConfSection s(section);
     std::pair<QMap::iterator, bool> ret = ini_data.insert(std::pair<char *, ConfSection>(section, s));
     q_itr = ret.first;
-    if (DEBUG)
-      printf("Config::addEntry()\t->\tcreating section %s and adding %s\n", section, entry.first);
+    printf("Config::addEntry()\t->\tcreating section %s and adding %s\n", section, entry.first);
   }
   else
   {
@@ -641,9 +632,9 @@ bool ConfSection::removeEntry(const char *key_name)
   if (DEBUG)
   {
     if (result)
-      printf("ConfSection::removeEntry(%s)\t-\tpassed\n", key_name);
+      printf("ConfSection::removeEntry(%s)\t->\tpassed\n", key_name);
     else
-      printf("ConfSection::removeEntry(%s)\t-\tfailed", key_name);
+      printf("ConfSection::removeEntry(%s)\t->\tfailed", key_name);
   }
   return result > 0;
 }
@@ -658,19 +649,97 @@ QuantumProp *ConfSection::get(const char *key_name)
     return res->second;
 }
 
+bool ConfSection::updateEntry(const char *update_key, QuantumProp *updated_val)
+{
+  return this->updateEntry(std::pair<const char *, QuantumProp *>(update_key, updated_val));
+}
+
 bool ConfSection::updateEntry(std::pair<const char *, QuantumProp *> updated_entry)
 {
   // check if the updated_entry->first exists
   SMap::iterator s_itr = sect_map.find(updated_entry.first);
   if (s_itr == sect_map.end())
+  {
+    if (DEBUG)
+      printf("ConfSection::updateEntry\t->\tfailed. key %s does not exist", updated_entry.first);
     return false;
+  }
   else
     s_itr->second = updated_entry.second;
-
+  if (DEBUG)
+    printf("ConfSection::updateEntry\t->\tsuccess");
   return true;
 }
 
 bool ConfSection::operator==(const ConfSection &other)
 {
   return &(this->sect_map) == &(other.sect_map);
+}
+
+QuantumProp *QuantumProp::create(int val)
+{
+  IntProp *prop = new IntProp(val);
+  QuantumProp *master = prop;
+  return master;
+}
+
+QuantumProp *QuantumProp::create(bool bool_val)
+{
+  BoolProp *prop = new BoolProp(bool_val);
+  QuantumProp *master = prop;
+  return master;
+}
+QuantumProp *QuantumProp::create(float val)
+{
+  FloatProp *prop = new FloatProp(val);
+  QuantumProp *master = prop;
+  return master;
+}
+QuantumProp *QuantumProp::create(char *val)
+{
+  std::string value(val);
+  StringProp *prop = new StringProp(value);
+  QuantumProp *master = prop;
+  return master;
+}
+QuantumProp *QuantumProp::create(std::string val)
+{
+  StringProp *prop = new StringProp(val);
+  QuantumProp *master = prop;
+  return master;
+}
+
+QuantumProp *QuantumProp::create(char *val, bool is_path)
+{
+  if (!is_path)
+    return QuantumProp::create(val);
+  else
+  {
+    std::string value(val);
+    PathProp *prop = new PathProp(value);
+    QuantumProp *master = prop;
+    return master;
+  }
+}
+
+QuantumProp *QuantumProp::create(std::string val, bool is_path)
+{
+  if (!is_path)
+    return QuantumProp::create(val);
+  else
+  {
+    PathProp *prop = new PathProp(val);
+    QuantumProp *master = prop;
+    return master;
+  }
+}
+
+QuantumProp *QuantumProp::create(const char *val)
+{
+  return QuantumProp::create((char *)val);
+}
+
+QuantumProp *QuantumProp::create(const char *val, bool is_path)
+{
+  return QuantumProp::create((char *)val, is_path);
 }
