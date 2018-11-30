@@ -114,6 +114,31 @@ int main()
         QuantumProp *get_test = _config.getValue(*sect_iter, "sample_get");
         std::cout << "Config.get() returned \"" << *get_test << "\"from \"sample_get\" in " << *sect_iter << " section" << std::endl;
 
+        // Test 8 : ConfSection - [] operator overload
+        std::cout << "\n Tst 8 -- ConfSection [] operator overload\n";
+        ConfSection *p_sect = _config.getSection(*(++sect_iter));
+        std::cout << "current_section: " << *sect_iter << std::endl;
+        assert(p_sect != 0);
+        ConfSection sect = *p_sect;
+        std::cout << sect << std::endl;
+        QuantumProp *string1_val = sect["repeat"];
+        assert(string1_val != 0);
+        std::cout << "repeat = " << *string1_val << std::endl;
+
+        // Test 9 : Confin - [] operator overload
+        std::cout << "\nTest 9 - Config [] operator overload\n";
+        ConfSection *sample_1 = _config["SectionOne"];
+        ConfSection *sample_2 = _config["section one"];
+        ConfSection *sample_3 = _config[0];
+        assert(sample_1 != 0);
+        assert(sample_2 == 0);
+        assert(sample_3 != 0);
+        std::cout << "SectionOne successfully recieved" << std::endl;
+        std::cout << *sample_1 << std::endl;
+        std::cout << "\n<unlabeled> successfully recieved" << std::endl;
+        std::cout << *sample_3 << std::endl
+                  << std::endl;
+
         // Saving -- Works !
         std::cout
             << "Saving " << fname << " to "

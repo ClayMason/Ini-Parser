@@ -597,12 +597,7 @@ std::ostream &operator<<(std::ostream &os, const Config &conf)
 
 ConfSection *Config::operator[](const char *section_name)
 {
-  char s_name[strlen(section_name)];
-  strcpy(s_name, section_name);
-  QMap::iterator itr = ini_data.find(s_name);
-  if (itr == ini_data.end())
-    return 0;
-  return &(itr->second);
+  return this->getSection(section_name);
 }
 
 std::ostream &operator<<(std::ostream &os, const QuantumProp &prop)
@@ -695,6 +690,14 @@ bool ConfSection::updateEntry(std::pair<const char *, QuantumProp *> updated_ent
   if (DEBUG)
     printf("ConfSection::updateEntry\t->\tsuccess\n");
   return true;
+}
+
+QuantumProp *ConfSection::operator[](const char *prop_name)
+{
+  /*
+   * given a property name, find the associating QuantumProp
+  */
+  return this->get(prop_name);
 }
 
 bool ConfSection::operator==(const ConfSection &other)

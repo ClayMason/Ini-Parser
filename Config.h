@@ -271,6 +271,7 @@ public:
   void save() const;
   void save(const char *fname) const;
   void save(std::string fname) const;
+  ConfSection *operator[](const char *section_name);
 
 private:
   // map of list to represent each key-value pair, separated by sections, within the list
@@ -290,7 +291,6 @@ private:
   // extracting values from lines
   const char *extractSection(std::string line);
   std::vector<const char *> extractKVPair(std::string line);
-  ConfSection *operator[](const char *section_name);
 };
 
 ////////////////////////////CONFSECTION///////////////////////////////////////////////////////////////////////
@@ -317,6 +317,7 @@ public:
   SMap::const_iterator end() const { return sect_map.end(); }
   int size() const { return sect_map.size(); }
   bool operator==(const ConfSection &other);
+  QuantumProp *operator[](const char *prop_name);
   const char *get_name() { return section_name; }
 
 private:
