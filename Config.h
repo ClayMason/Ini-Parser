@@ -109,7 +109,10 @@ public:
 
   QuantumProp() : type(0), str_value(0) {}
   QuantumProp(const char *_type) : type(_type), str_value(0) {}
-  ~QuantumProp() {}
+  virtual ~QuantumProp()
+  {
+    delete this->str_value;
+  }
 
   // accessors
   bool isBool() { return type != 0 && strcmp(type, "bool") == 0; }
@@ -145,7 +148,10 @@ class IntProp : public QuantumProp
 public:
   int value;
   IntProp(int val) : QuantumProp("int"), value(val) { this->str_value = stringify(val); }
-  ~IntProp() {}
+  ~IntProp()
+  {
+    delete this->str_value;
+  }
 
 private:
   char *stringify(int v)
@@ -163,7 +169,10 @@ class BoolProp : public QuantumProp
 public:
   bool value;
   BoolProp(bool val) : QuantumProp("bool"), value(val) { this->str_value = stringify(val); }
-  ~BoolProp() {}
+  ~BoolProp()
+  {
+    delete this->str_value;
+  }
 
 private:
   char *stringify(bool v)
@@ -189,7 +198,10 @@ class StringProp : public QuantumProp
 public:
   std::string value;
   StringProp(std::string val) : QuantumProp("string"), value(val) { this->str_value = stringify(val); }
-  ~StringProp() {}
+  ~StringProp()
+  {
+    delete this->str_value;
+  }
 
 private:
   char *stringify(std::string val)
@@ -206,7 +218,10 @@ class FloatProp : public QuantumProp
 public:
   float value;
   FloatProp(float val) : QuantumProp("float"), value(val) { this->str_value = stringify(val); }
-  ~FloatProp() {}
+  ~FloatProp()
+  {
+    delete this->str_value;
+  }
 
 private:
   char *stringify(float val)
@@ -224,7 +239,10 @@ class PathProp : public QuantumProp
 public:
   std::string value;
   PathProp(std::string val) : QuantumProp("path"), value(val) { this->str_value = stringify(val); }
-  ~PathProp() {}
+  ~PathProp()
+  {
+    delete this->str_value;
+  }
 
 private:
   char *stringify(std::string val)
@@ -257,6 +275,7 @@ public:
   typedef std::map<char *, ConfSection, cmp_str> QMap;
 
   Config(const char *fname);
+  ~Config();
   bool init(); // throws exceptions
 
   // operator overloads
@@ -303,6 +322,7 @@ class ConfSection
 public:
   // TODO: might not need sect_name -- repetition
   ConfSection(const char *sect_name);
+  ~ConfSection();
   typedef std::map<const char *, QuantumProp *, cmp_str> SMap;
 
   friend std::ostream &operator<<(std::ostream &os, const ConfSection &c_section);

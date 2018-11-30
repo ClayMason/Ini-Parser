@@ -84,6 +84,7 @@ bool Config::init()
       // now add the entry to the map
       std::vector<const char *> kv_arr = this->extractKVPair(line);
       std::string val = simplify(kv_arr[1]);
+      delete &(kv_arr[1]);
       QuantumProp *q_prop = getValueType(val);
       std::pair<const char *, QuantumProp *> entry(kv_arr[0], q_prop);
       q_itr->second.addEntry(entry);
@@ -163,7 +164,8 @@ QuantumProp *Config::getValueType(std::string value)
   // printf ("[GET VALUE TYPE] => ");
   if (regex_isInt(value))
   {
-    printf("[INT] %s\n", value.c_str());
+    if (DEBUG)
+      printf("[INT] %s\n", value.c_str());
     std::stringstream ss(value);
     int int_val = 0;
     ss >> int_val;
@@ -172,7 +174,8 @@ QuantumProp *Config::getValueType(std::string value)
   }
   else if (regex_isBool(value))
   {
-    printf("[BOOL] %s\n", value.c_str());
+    if (DEBUG)
+      printf("[BOOL] %s\n", value.c_str());
     bool bool_val;
     if (value.compare("Yes") == 0)
       bool_val = true;
@@ -183,7 +186,8 @@ QuantumProp *Config::getValueType(std::string value)
   }
   else if (regex_isFloat(value))
   {
-    printf("[FLOAT] %s\n", value.c_str());
+    if (DEBUG)
+      printf("[FLOAT] %s\n", value.c_str());
 
     std::string new_val("0");
     new_val.append(value).append("0");
@@ -193,15 +197,18 @@ QuantumProp *Config::getValueType(std::string value)
   }
   else if (regex_isPath(value))
   {
-    printf("[PATH] %s\n", value.c_str());
+    if (DEBUG)
+      printf("[PATH] %s\n", value.c_str());
 
     return QuantumProp::create(value, true);
   }
   else
   {
-    printf("[STRING] %s\n", value.c_str());
-    printf("=>String val: %s\n", value.c_str());
-
+    if (DEBUG)
+    {
+      printf("[STRING] %s\n", value.c_str());
+      printf("=>String val: %s\n", value.c_str());
+    }
     return QuantumProp::create(value);
   }
 }
@@ -360,7 +367,7 @@ std::vector<const char *> Config::extractKVPair(std::string line)
     while (i < 2 && std::getline(ss, segment, '='))
     {
       segment = strip(segment);
-      char *val = new char[segment.size()];
+      char *val = new char[segment.size() + 1];
       strcpy(val, segment.c_str());
       kv_arr.push_back(val);
       i++;
@@ -785,4 +792,31 @@ QuantumProp *QuantumProp::create(const char *val, bool is_path)
 QuantumProp *QuantumProp::create(double val)
 {
   return QuantumProp::create((float)val);
+}
+
+// deconstructors
+Config::~Config()
+{
+  delete file_name;
+
+  // SHOULD HAPPEN LAST: delete all section names
+  QMap::iterator q_itr;
+  for (q_itr = ini_data.begin(); q_itr != ini_data.end(); ++q_itr)
+  {
+    delete q_itr->first;
+  }
+}
+
+ConfSection::~ConfSection()
+{
+  // delete the QuantumProp within the SMap sect_map
+  SMap::iterator s_itr;
+  for (s_itr = sect_map.begin(); s_itr != sect_map.end(); ++s_itr)
+  {
+    // delete both the first and second
+    // first = dynamically allocated in extractKVPair
+    // second = dynamically allocated in all QuantumProp::create() functions
+    delete s_itr->first;
+    delete s_itr->second;
+  }
 }
